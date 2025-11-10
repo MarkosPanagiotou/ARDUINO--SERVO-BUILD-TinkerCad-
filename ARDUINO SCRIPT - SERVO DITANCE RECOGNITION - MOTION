@@ -1,0 +1,79 @@
+#include <Servo.h>
+#include <LiquidCrystal.h>
+
+#define TRIG_PIN 9
+#define ECHO_PIN 3
+#define SERVO_PIN 6
+
+// LCD pins: RS, E, D4, D5, D6, D7
+LiquidCrystal lcd(12, 11, 5, 4, 2, 1);
+
+Servo myServo;
+
+long duration;
+int distance;
+int servoPos = 90;
+
+// Distance range (in cm)
+const int minDistance = 25;
+const int maxDistance = 300;
+
+void setup() {
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  myServo.attach(SERVO_PIN);
+  myServo.write(servoPos);
+
+  lcd.begin(16, 2); // Initialize 16x2 LCD
+  lcd.print("Initializing...");
+  
+  Serial.begin(9600);
+  delay(1000);
+  lcd.clear();
+     delay(50);
+
+  lcd.print("Hello, world!");
+    delay(5000);
+}
+
+void loop() {
+  // Trigger ultrasonic pulse
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // Measure echo time
+  duration = pulseIn(ECHO_PIN, HIGH);
+
+  // Calculate distance (in cm)
+  distance = duration * 0.034 / 2;
+
+  // Constrain distance within range
+  distance = constrain(distance, minDistance, maxDistance);
+
+  // Map distance to servo angle
+  servoPos = map(distance, minDistance, maxDistance, 0, 180);
+  myServo.write(servoPos);
+
+  // Print to Serial
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.print(" cm | Servo Angle: ");
+  Serial.println(servoPos);
+
+  // Print to LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Distance: ");
+  lcd.print(distance);
+  lcd.print(" cm");
+
+  lcd.setCursor(0, 1);
+  lcd.print("Angle: ");
+  lcd.print(servoPos);
+  lcd.print((char)223); // degree symbol
+
+  delay(300);
+}
